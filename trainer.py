@@ -1,6 +1,21 @@
-import numpy as np
-import tensorflow as tf
-
 import model
+import numpy as np
 
-def train(input_data, predict,  loss):
+
+def main():
+    np.random.seed(7)
+
+    mod = model.makemodel()
+
+    data = [[[i / model.length] * 2 for i in range(model.length)] for _ in range(100)]
+    result = [[i / model.length for i in range(model.length)] for _ in range(100)]
+
+    mod.fit(x=data,
+            y=result,
+            batch_size=2,
+            epochs=4)
+
+    mod.save(model.location)
+
+if __name__ == "__main__":
+    main()

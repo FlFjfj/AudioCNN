@@ -1,65 +1,41 @@
-import numpy as np
-import tensorflow as tf
+import keras
+import keras.layers as kl
+from keras.models import Sequential
 
-length = 44100
-predict = int(length / (4 * 9))
-batch = 8
-
+length = 441
+location = 'model.h5'
 
 def makemodel():
-    with tf.name_scope("audio_network") as scope:
-        input_layer = tf.placeholder(dtype=np.float32,
-                                     shape=[batch, length, 1],
-                                     name="input")
+    model = Sequential()
 
-        conv1 = tf.layers.conv1d(inputs=input_layer,
-                                 filters=64,
-                                 kernel_size=5,
-                                 padding="same",
-                                 name="conv1",
-                                 trainable=True)
-        pool1 = tf.layers.max_pooling1d(inputs=conv1,
-                                        pool_size=4,
-                                        strides=4,
-                                        name='pool1')
+    model.add(kl.Conv1D(4,
+                        kernel_size=3,
+                        padding='same',
+                        input_shape=(length, 2),
+                        activation='relu'))
 
-        conv2 = tf.layers.conv1d(inputs=pool1,
-                                 filters=128,
-                                 padding="same",
-                                 kernel_size=10,
-                                 name="conv2",
-                                 trainable=True)
-        pool2 = tf.layers.max_pooling1d(inputs=conv2,
-                                        pool_size=9,
-                                        strides=9,
-                                        name="pool2")
+    model.add(kl.MaxPool1D(pool_size=2))
 
-        conv3 = tf.layers.conv1d(inputs=pool2,
-                                 filters=128,
-                                 padding="same",
-                                 kernel_size=100,
-                                 name="conv3",
-                                 trainable=True)
-        pool3 = tf.layers.max_pooling1d(inputs=conv3,
-                                        pool_size=49,
-                                        strides=49,
-                                        name="pool3")
+    model.add(kl.Conv1D(128, 3,
+                        strides=1,
+                        padding='same',
+                        activation='relu'))
 
-        convolutionedFlat = tf.reshape(pool3,
-                                       [np.int64(batch), np.int64(length / 9 / 4 / 49 * 128)],
-                                       name="flatConv")
+    model.add(kl.MaxPool1D(pool_size=2))
 
-        result = tf.layers.dense(convolutionedFlat,
-                                 units=np.int64(predict),
-                                 activation=tf.nn.relu,
-                                 name="deconv1",
-                                 trainable=True)
+    model.add(kl.Conv1D(128, 3,
+                        strides=1,
+                        padding='same',
+                        activation='relu'))
 
-        prediction = tf.placeholder(dtype=np.float32,
-                                shape=[batch, predict],
-                                name="prediction")
+    model.add(kl.MaxPool1D(pool_size=2))
 
-        abs_diff = tf.reduce_sum(tf.square(prediction - result))
-        loss = tf.reduce_sum(abs_diff)
+    model.add(kl.Flatten())
 
-    return input_layer, result, prediction, loss
+    model.add(kl.Dense(units=length,
+                       activation='relu'))
+
+    model.compile(loss=keras.losses.mean_squared_error,
+                  optimizer=keras.optimizers.Adam(),
+                  metrics=['accuracy'])
+    return model
