@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 import model
+import datasetLoader
 import wave
 
 def main():
@@ -24,28 +25,40 @@ def main():
     session = tf.Session()
     session.run(tf.global_variables_initializer())
 
+    audio_data, pred_data = datasetLoader.loadDataset('techicolorbeat.wav')
+    print(len(audio_data), model.length)
     with tf.name_scope("train"):
-        for i in range(20):
-            if i % 5 == 0:
-                data, lossval, _ = session.run([summary, loss, train],
-                                               {input_layer: input_data, predict_layer: prediction_data},
-                                               options=run_options,
-                                               run_metadata=meta_data)
-                writer.add_run_metadata(meta_data, 'step%d' % i)
-                writer.add_summary(data, i)
-                print("Writed data for ", i, ", loss=", lossval)
-            else:
+        leftL = 0
+        leftP = 0
+        for i in range(len(audio_data)):
+            input_data = [[[s] for s in audio_data[i][:model.length]]]
+            prediction_data = [[p for p in audio_data[i][:model.predict]]]
+            data, lossval, _ = session.run([summary, loss, train],
+                                            {input_layer: input_data, predict_layer: prediction_data},
+                                            options=run_options,
+                                            run_metadata=meta_data)
+            writer.add_run_metadata(meta_data, 'step%d' % i)
+            writer.add_summary(data, i)
+            print("Written data for ", i, ", loss=", lossval)
+            for j in range(5):
                 session.run(train, {input_layer: input_data, predict_layer: prediction_data})
     #saver.save(session, "./model.cpkt")
-
-    result = session.run(result_layer, {input_layer: input_data})
-    a = wave.open("./audio.wave", 'w')
+    sound_data = np.array(1)
+    for i in range(100):
+        result = session.run(result_layer, {input_layer: input_data})
+        new_data = [[i] for i in result[0]]
+        input_data = input_data[0][len(new_data):]
+        input_data.extend(new_data)
+        input_data = [input_data]
+        sound_data = np.append(sound_data, [result[0]])
+        print("written samples " + str(i))
+    a = wave.open("./audio.wav", 'w')
     a.setsampwidth(4)
-    a.setframerate(4410);
-    a.setnframes(len(result[0]))
+    a.setframerate(44100);
+    a.setnframes(len(sound_data))
     a.setnchannels(1)
-    a.writeframes(result[0])
+    a.writeframes(sound_data)
     a.close()
-    print("result: ", result)
+    print("audio written");
 if __name__ == "__main__":
     main()

@@ -3,7 +3,7 @@ import tensorflow as tf
 
 length = 44100
 predict = int(length / (4 * 9))
-batch = 8
+batch = 1
 
 
 def makemodel():
@@ -13,7 +13,7 @@ def makemodel():
                                      name="input")
 
         conv1 = tf.layers.conv1d(inputs=input_layer,
-                                 filters=64,
+                                 filters=32,
                                  kernel_size=5,
                                  padding="same",
                                  name="conv1",
@@ -24,7 +24,7 @@ def makemodel():
                                         name='pool1')
 
         conv2 = tf.layers.conv1d(inputs=pool1,
-                                 filters=128,
+                                 filters=32,
                                  padding="same",
                                  kernel_size=10,
                                  name="conv2",
@@ -35,7 +35,7 @@ def makemodel():
                                         name="pool2")
 
         conv3 = tf.layers.conv1d(inputs=pool2,
-                                 filters=128,
+                                 filters=32,
                                  padding="same",
                                  kernel_size=100,
                                  name="conv3",
@@ -46,7 +46,7 @@ def makemodel():
                                         name="pool3")
 
         convolutionedFlat = tf.reshape(pool3,
-                                       [np.int64(batch), np.int64(length / 9 / 4 / 49 * 128)],
+                                       [np.int64(batch), np.int64(length / 9 / 4 / 49 * 32)],
                                        name="flatConv")
 
         result = tf.layers.dense(convolutionedFlat,

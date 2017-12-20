@@ -11,8 +11,8 @@ def loadDataset(path):
 
     left = file.getnframes()
     while left >= model.length + model.predict:
-        input_data.append(file.readframes(model.length))
-        predict.append(file.readframes(model.predict))
+        input_data.append(file.readframes(model.length//2))
+        predict.append(file.readframes(model.predict//2))
         left -= model.length + model.predict
 
     return input_data, predict
