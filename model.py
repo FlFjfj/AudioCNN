@@ -2,14 +2,14 @@ import keras
 import keras.layers as kl
 from keras.models import Sequential
 
-length = 441
-location = 'model.h5'
+length = 2500
+location = 'model_wide.h5'
 
 def makemodel():
     model = Sequential()
 
-    model.add(kl.Conv1D(4,
-                        kernel_size=3,
+    model.add(kl.Conv1D(128,
+                        kernel_size=16,
                         padding='same',
                         input_shape=(length, 2),
                         activation='relu'))
@@ -28,14 +28,14 @@ def makemodel():
                         padding='same',
                         activation='relu'))
 
-    model.add(kl.MaxPool1D(pool_size=2))
+    model.add(kl.AvgPool1D(pool_size=16))
 
     model.add(kl.Flatten())
 
     model.add(kl.Dense(units=length,
-                       activation='relu'))
+                       activation='sigmoid'))
 
-    model.compile(loss=keras.losses.mean_squared_error,
-                  optimizer=keras.optimizers.Adam(),
+    model.compile(loss=keras.losses.mean_absolute_percentage_error,
+                  optimizer=keras.optimizers.Adagrad(),
                   metrics=['accuracy'])
     return model
